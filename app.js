@@ -408,8 +408,13 @@ function initControls() {
     document.getElementById("pane-overview").classList.toggle("hidden", state.tab !== "overview");
     document.getElementById("pane-methods").classList.toggle("hidden", state.tab !== "methods");
     if (!isStatic) {
-      // 从静态页返回交互页：容器尺寸恢复后需要重算地图
-      requestAnimationFrame(() => { map.invalidateSize(); refreshAll(); });
+      // 从静态页返回交互页：容器尺寸恢复后需要重算地图与图表
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+        chart.resize();
+        chartAge.resize();
+        refreshAll();
+      });
     }
   }));
   document.getElementById("bmi-metric").addEventListener("change", e => {
