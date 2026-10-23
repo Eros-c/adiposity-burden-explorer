@@ -123,8 +123,8 @@ function buildSeries(rec, idx, histLast, futureOnlySSP) {
     // 节点 = 历史点 + 预测点（缺年处由 PCHIP 平滑补足）
     const y0 = hYears.length ? hYears[hYears.length - 1] : null;
     const y1raw = pYears[0];
-    // 混合区：历史末端 → max(首个预测年, 历史末端+4)——把两套数据源的水平差摊平在 4 年内
-    const blendEnd = y0 !== null ? Math.min(Math.max(y1raw, y0 + 4), pYears[pYears.length - 1]) : y1raw;
+    // 混合区：历史末端 → 历史末端+8 年——把两套数据源的水平差摊平在 8 年内（仅展示）
+    const blendEnd = y0 !== null ? Math.min(Math.max(y1raw, y0 + 8), pYears[pYears.length - 1]) : y1raw;
     const dense = [];
     // 历史段 + 混合区采样（缺口/混合区 0.5 年加密）
     if (y0 !== null) {
@@ -401,12 +401,13 @@ function initControls() {
     document.querySelectorAll(".tab").forEach(x => x.classList.remove("active"));
     t.classList.add("active");
     state.tab = t.dataset.tab;
-    const isStatic = (state.tab === "overview" || state.tab === "methods");
+    const isStatic = (state.tab === "overview" || state.tab === "methods" || state.tab === "validation");
     document.getElementById("controls-bmi").classList.toggle("hidden", state.tab !== "bmi");
     document.getElementById("controls-burden").classList.toggle("hidden", state.tab !== "burden");
     document.getElementById("main-panes").classList.toggle("hidden", isStatic);
     document.getElementById("pane-overview").classList.toggle("hidden", state.tab !== "overview");
     document.getElementById("pane-methods").classList.toggle("hidden", state.tab !== "methods");
+    document.getElementById("pane-validation").classList.toggle("hidden", state.tab !== "validation");
     if (!isStatic) {
       // 从静态页返回交互页：容器尺寸恢复后需要重算地图与图表
       requestAnimationFrame(() => {
