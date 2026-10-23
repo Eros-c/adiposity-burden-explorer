@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Global adiposity-associated disease risk, 2015–2050</title>
+<link rel="stylesheet" href="vendor/leaflet.css">
+<script src="vendor/leaflet.js"></script>
+<script src="vendor/echarts.min.js"></script>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Global spatiotemporal distribution of adiposity-associated disease risk, 2015–2050</h1>
+  <p class="subtitle">Interactive results explorer — BMI and disease burden attributable to high BMI</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" data-tab="overview">Overview</button>
+  <button class="tab" data-tab="bmi">BMI</button>
+  <button class="tab" data-tab="burden">Disease burden attributable to high BMI</button>
+  <button class="tab" data-tab="methods">Methods</button>
+</nav>
+
+<!-- ======== Overview ======== -->
+<section id="pane-overview" class="static-pane">
+  <h2>Study overview</h2>
+  <p>
+    Overweight and obesity continue to rise worldwide, reshaping the global burden of
+    chronic disease. This study quantifies the <b>global, spatiotemporally explicit
+    distribution of disease burden attributable to high body-mass index (BMI)</b>,
+    for the historical period 2015–2021 and projections to 2050 under four
+    Shared Socioeconomic Pathways (SSP1-2.6, SSP2-4.5, SSP3-7.0, SSP5-8.5).
+  </p>
+  <h3>What this explorer shows</h3>
+  <ul>
+    <li><b>BMI exposure</b> — mean BMI and obesity prevalence (BMI ≥ 30) at 0.1° grid
+      resolution, 2015–2050, for every country, sex, and five-year age group.</li>
+    <li><b>Attributable disease burden</b> — deaths and DALYs attributable to high BMI for
+      <b>23 headline causes</b> (12 cancers, cardiovascular diseases, metabolic and other
+      conditions) plus their aggregate, mapped at 0.1° resolution and charted as national
+      and global time series, by sex and age.</li>
+  </ul>
+  <h3>Headline findings</h3>
+  <ul>
+    <li>Global mean adult BMI rises from <b>25.0 kg/m² (2015)</b> to
+      <b>27.7 kg/m² (2050, SSP2-4.5)</b>; global obesity prevalence nearly doubles,
+      from 14.4% to ~30.7%.</li>
+    <li>High-BMI-attributable deaths and DALYs increase in all four scenarios;
+      differences between scenarios at the burden level are small because disease
+      baselines are shared across scenarios.</li>
+    <li>Attributable burden is increasingly concentrated in low- and middle-income
+      regions, with marked spatial heterogeneity at sub-national scale.</li>
+  </ul>
+  <h3>How to use</h3>
+  <p>
+    Use the <b>BMI</b> tab to explore exposure (mean BMI / obesity) and the
+    <b>Disease burden</b> tab to explore attributable deaths and DALYs by disease,
+    measure, year and sex. Click any country on the map to view its trend; use the
+    year slider to move through 2015–2050. See the <b>Methods</b> tab for the
+    analysis pipeline and replication code.
+  </p>
+</section>
+
+<!-- ======== BMI / burden 交互区（原有） ======== -->
+<div class="controls hidden" id="controls-bmi">
+  <label>Metric
+    <select id="bmi-metric">
+      <option value="meanbmi">Mean BMI</option>
+      <option value="obesity">Obesity prevalence (BMI ≥ 30)</option>
+    </select>
+  </label>
+  <label>Sex
+    <select id="bmi-sex">
+      <option value="Both">Both</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+  </label>
+  <label>Age
+    <select id="bmi-age"></select>
+  </label>
+  <label>Scenario
+    <select id="bmi-scenario"></select>
+  </label>
+  <label class="year-ctl">Year <span id="bmi-year-label" class="year-label">2050</span>
+    <input type="range" id="bmi-year" min="0" max="7" step="1" value="7">
+  </label>
+</div>
+
+<div class="controls hidden" id="controls-burden">
+  <label>Disease
+    <select id="burden-disease"></select>
+  </label>
+  <label>Measure
+    <select id="burden-measure">
+      <option value="deaths">Deaths</option>
+      <option value="dalys">DALYs</option>
+    </select>
+  </label>
+  <label>Sex
+    <select id="burden-sex">
+      <option value="Both">Both</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+    </select>
+  </label>
+  <label class="year-ctl">Year <span id="burden-year-label" class="year-label">2050</span>
+    <input type="range" id="burden-year" min="0" max="6" step="1" value="6">
+  </label>
+</div>
+
+<main id="main-panes" class="hidden">
+  <section class="map-pane">
+    <div id="map"></div>
+    <div class="legend"><div class="legend-gradient" id="legend-gradient"></div>
+      <div class="legend-ticks" id="legend-ticks"></div>
+      <div class="legend-label" id="legend-label"></div>
+    </div>
+    <p class="note" id="scenario-note">Maps show overall (both sexes, all ages) SSP2-4.5; sex/age selections apply to the trend chart. Burden maps for 2030–2045 interpolate the spatial pattern between 2025 and 2050 (national totals exact).</p>
+  </section>
+  <section class="chart-pane">
+    <div class="chart-head">
+      <span id="chart-title">Global</span>
+      <button id="reset-country">Reset to global</button>
+    </div>
+    <div id="chart"></div>
+    <div id="chart-age-wrap" class="hidden">
+      <div class="chart-head"><span id="chart-age-title">Age profile, 2050</span></div>
+      <div id="chart-age"></div>
+    </div>
+    <p class="note">Solid grey: historical estimates (GBD 2021, 2015–2021; annualised). Dashed grey: transition, smoothed over four years (historical and projection products differ slightly in level; the seam is blended for display only). Blue: projection under SSP2-4.5. Click a country to view its trend. (BMI trend additionally shows all four SSP scenarios.)</p>
+  </section>
+</main>
+
+<!-- ======== Methods ======== -->
+<section id="pane-methods" class="static-pane hidden">
+  <h2>Methods</h2>
+  <h3>Analysis pipeline</h3>
+  <ol>
+    <li><b>Inputs.</b> GBD 2021 total and high-BMI-attributable deaths/DALYs (65 causes,
+      2015–2021), GBD Foresight reference burden (2022–2050), GBD adult overweight/obesity
+      forecast (1990–2050), NCD-RisC national BMI distributions, IIASA SSP / WiC
+      demographics, CMIP6 climate, ERA5, ISIMIP/WorldPop population grids, GHS urbanicity,
+      Natural Earth boundaries, WCRF/AICR dose–response functions.</li>
+    <li><b>Covariate harmonisation.</b> All future drivers are harmonised at national and
+      0.5°/0.1° grid scale across four SSPs (population, GDP, urbanicity, climate, PM2.5,
+      night-time lights, built-up surface).</li>
+    <li><b>BMI modelling.</b> National BMI-7-category anchors (2025–2050, 204 territories)
+      are combined with a future-capable <b>multilevel regression with poststratification
+      (MRP)</b> model (Bayesian, Stan/CmdStan) and produced as annual 0.1° BMI-category
+      probability grids for 2025–2050; the historical layer (2015–2024) uses the same
+      framework fitted to NCD-RisC data, with temporal backtesting.</li>
+    <li><b>Attribution.</b> Cause-specific population-attributable fractions (PAFs) are
+      computed from BMI-category probabilities and published relative risks
+      (WCRF/AICR for colorectal cancer; GBD crosswalk for the remaining causes), then
+      applied to GBD 2021 (historical) and GBD Foresight (projected) reference burdens to
+      obtain attributable deaths and DALYs.</li>
+    <li><b>Spatialisation.</b> National attributable burdens are allocated to 0.1° grid
+      cells with population × PAF weights and validated against GBD country totals;
+      spatial interpolation is verified at national level.</li>
+    <li><b>Outputs.</b> National time series (overall, sex, age group) and 0.1° maps for
+      23 headline causes plus their aggregate; main and supplementary manuscript figures;
+      this interactive explorer.</li>
+  </ol>
+  <h3>Replication code</h3>
+  <p>
+    The complete pipeline (data harmonisation, MRP model, PAF/burden computation,
+    spatial allocation, and all figure scripts) is openly available:
+    <br><br>
+    <b>GitHub — adiposity-burden-replication:</b>
+    <a href="https://github.com/Eros-c/adiposity-burden-replication" target="_blank">
+      https://github.com/Eros-c/adiposity-burden-replication</a>
+    <br><br>
+    The repository contains the stage-by-stage reproduction guide
+    (<code>docs/PIPELINE.md</code>), the external data sources
+    (<code>docs/DATA.md</code>), environment files, and this explorer's data-export
+    script (<code>code/s16_web_export/</code>).
+  </p>
+  <h3>Notes on interpretation</h3>
+  <ul>
+    <li>Historical estimates (2015–2021) derive from GBD 2021; projections (2025–2050)
+      apply study PAFs to the shared GBD Foresight reference burden. The two segments
+      differ slightly in level for some countries; the displayed transition is smoothed
+      over four years for readability only.</li>
+    <li>Scenario differences in attributable burden are small by design: the reference
+      burden is common across SSPs, so differences enter only through BMI exposure.</li>
+    <li>Burden maps for 2030–2045 interpolate the spatial pattern between 2025 and 2050
+      weight rasters; national totals are exact.</li>
+  </ul>
+</section>
+
+<footer>
+  <p>Data: GBD 2021 / GBD Foresight / NCD-RisC / IIASA SSP / CMIP6.
+  Code: <a href="https://github.com/Eros-c/adiposity-burden-replication" target="_blank">github.com/Eros-c/adiposity-burden-replication</a>.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
