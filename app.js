@@ -464,6 +464,19 @@ function initControls() {
 async function init() {
   meta = await loadData("data/meta.js", "META");
   await loadData("data/trends_bmi_v3.js", "BMI_TRENDS_V3");
+  // URL 深链：#bmi / #burden / #methods / #validation
+  const hash = (location.hash || "").replace("#", "");
+  if (["bmi", "burden", "methods", "validation"].includes(hash)) {
+    state.tab = hash;
+    document.querySelectorAll(".tab").forEach(x => x.classList.toggle("active", x.dataset.tab === hash));
+    const isStatic = (hash === "methods" || hash === "validation");
+    document.getElementById("controls-bmi").classList.toggle("hidden", hash !== "bmi");
+    document.getElementById("controls-burden").classList.toggle("hidden", hash !== "burden");
+    document.getElementById("main-panes").classList.toggle("hidden", isStatic);
+    document.getElementById("pane-overview").classList.toggle("hidden", hash !== "overview");
+    document.getElementById("pane-methods").classList.toggle("hidden", hash !== "methods");
+    document.getElementById("pane-validation").classList.toggle("hidden", hash !== "validation");
+  }
   initMap();
   initControls();
   initChart();
